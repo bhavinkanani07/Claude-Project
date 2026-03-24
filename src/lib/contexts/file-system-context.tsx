@@ -60,6 +60,27 @@ export function FileSystemProvider({
     if (!selectedFile) {
       const files = fileSystem.getAllFiles();
 
+      // If no files exist, create a starter App.jsx
+      if (files.size === 0) {
+        const starterAppCode = `import React from 'react';
+
+export default function App() {
+  return (
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-8">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold text-gray-800 mb-4">Welcome to UIGen</h1>
+        <p className="text-gray-600 mb-6">Start by asking the AI to create a component!</p>
+        <p className="text-sm text-gray-500">Try: "Create a button component"</p>
+      </div>
+    </div>
+  );
+}`;
+        fileSystem.createFile("/App.jsx", starterAppCode);
+        setSelectedFile("/App.jsx");
+        triggerRefresh();
+        return;
+      }
+
       // Check if App.jsx exists
       if (files.has("/App.jsx")) {
         setSelectedFile("/App.jsx");
