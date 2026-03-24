@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { useFileSystem } from "@/lib/contexts/file-system-context";
 import { Plus, LogOut, FolderOpen, ChevronDown } from "lucide-react";
 import { AuthDialog } from "@/components/auth/AuthDialog";
 import { signOut } from "@/actions";
@@ -38,6 +39,7 @@ interface Project {
 }
 
 export function HeaderActions({ user, projectId }: HeaderActionsProps) {
+  const { reset, getAllFiles } = useFileSystem();
   const router = useRouter();
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [authMode, setAuthMode] = useState<"signin" | "signup">("signin");
@@ -90,6 +92,28 @@ export function HeaderActions({ user, projectId }: HeaderActionsProps) {
       data: {},
     });
     router.push(`/${project.id}`);
+  };
+
+  const handleClearWorkspace = () => {
+    reset();
+  };
+
+  const handleExportFiles = () => {
+    const files = getAllFiles();
+    const exportData: Record<string, string> = {};
+    files.forEach((content, path) => {
+      exportData[path] = content;
+    });
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "uigen-files.json";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   if (!user) {
@@ -158,6 +182,14 @@ export function HeaderActions({ user, projectId }: HeaderActionsProps) {
       <Button className="flex items-center gap-2 h-8" onClick={handleNewDesign}>
         <Plus className="h-4 w-4" />
         New Design
+      </Button>
+
+      <Button className="flex items-center gap-2 h-8" onClick={handleClearWorkspace}>
+        Clear Workspace
+      </Button>
+
+      <Button className="flex items-center gap-2 h-8" onClick={handleExportFiles}>
+        Export Files
       </Button>
 
       <Button
